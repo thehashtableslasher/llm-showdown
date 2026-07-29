@@ -1,0 +1,35 @@
+Modern Furniture, Inc. produces two types of wooden chairs. The manufacture of Chair A requires 2 hours of assembly time and 4 hours of finishing time. Chair B requires 3 hours to assemble and 3 hours to finish. Modern Furniture Inc. estimates that next week 72 hours will be available for assembly operations, and 108 hours will be available in the finishing shop. The net profits for Chairs A and B are $10 and $9, respectively. If it is estimated that the maximum demand for Chair B is 16 units, what is the optimal product mix?
+%%
+{
+    "coefficients": [10, 9],
+    "objective": [18, 12],
+    "objective_value": 288
+}
+%%
+The milling department of a large manufacturing plant is required to process six different kinds of products in a given period of time. The department has four milling machines available. These machines differ in age and efficiency, so certain machines may be better suited to a given kind of product than other machines. The department needs to produce 40 units of Product A, 10 units of Product B, 50 units of Product C, 25 units of Product D, 35 units of Product E, and 15 units of Product F. Machines 1, 2, 3 and 4 are available up to a respective maximum of 50, 35, 45, and 60 hours of processing time. Additionally, the following table includes the number of units of each product to be processed, as well as the time and processing cost to produce one unit on any particular machine. Determine the minimum-cost processing policy, assuming that each product need not be processed by more than one machine.
+
+Processing Times (hours per unit)
+---------------------------------
+
+|           | Machine 1 | Machine 2 | Machine 3 | Machine 4 |
+|-----------|-----------|-----------|-----------|-----------|
+| Product A |      0.80 |      1.10 |      0.95 |      1.25 |
+| Product B |      0.75 |      0.90 |      0.95 |      1.00 |
+| Product C |      0.70 |      0.95 |      1.10 |      1.20 |
+| Product D |      1.05 |      1.00 |      0.95 |      1.10 |
+| Product E |      0.85 |      0.95 |      1.05 |      0.90 |
+| Product F |      1.25 |      1.25 |      1.50 |      1.35 |
+
+Processing Costs ($ per unit)
+-----------------------------
+
+|           | Machine 1 | Machine 2 | Machine 3 | Machine 4 |
+|-----------|-----------|-----------|-----------|-----------|
+| Product A |     $2.00 |     $1.80 |     $2.20 |     $2.50 |
+| Product B |     $4.65 |     $5.40 |     $5.25 |     $6.50 |
+| Product C |     $1.50 |     $1.75 |     $1.75 |     $1.90 |
+| Product D |     $3.20 |     $3.50 |     $3.00 |     $3.75 |
+| Product E |     $1.00 |     $1.20 |     $1.35 |     $1.20 |
+| Product F |     $2.25 |     $2.00 |     $2.50 |     $2.25 |
+%%
+TODO
