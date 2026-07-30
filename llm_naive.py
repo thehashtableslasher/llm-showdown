@@ -1,3 +1,5 @@
+import multiprocessing as mp
+import operator
 import sys
 import uuid
 
@@ -9,19 +11,20 @@ from langgraph.prebuilt import ToolNode
 import numpy as np
 from typing_extensions import Annotated
 
-from tools import add_objective, add_constraint, linprog
+from tools import add_decision_variable, add_objective, add_constraint, linprog
 from config import get_model
-
-concat = lambda a, b: np.concat((a, b)) if a is not None and b is not None else b
 
 class MyState(MessagesState):
     messages: Annotated[list, add_messages]
-    c: np.ndarray
+    counter: mp.Value
+    vars: Annotated[dict[str, int], operator.or_]
+    intvars: Annotated[list[str], operator.add]
+    c: dict[str, float]
     cmul: float
-    A: Annotated[np.ndarray, concat]
-    b: Annotated[np.ndarray, concat]
-    Aeq: Annotated[np.ndarray, concat]
-    beq: Annotated[np.ndarray, concat]
+    A: Annotated[list[dict[str, float]], operator.add]
+    b: Annotated[list[float], operator.add]
+    Aeq: Annotated[list[dict[str, float]], operator.add]
+    beq: Annotated[list[float], operator.add]
         
 if __name__ == "__main__":
     system_prompt = """
@@ -30,7 +33,7 @@ if __name__ == "__main__":
             You are a helpful AI agent with expertise in the field of linear programming (LP). You can easily solve linear programming problems, including both direct descriptions of problems, and word problems where the linear programming formulation may not be immediately obvious.
         </background>
         <role>
-            Use <tool>add_objective</tool>, <tool>add_constraint</tool>, and <tool>linprog</tool> to solve whatever linear programming problem that the user provides. Describe the solution to the user after solving.
+            Use <tool>add_decision_variable</tool>, <tool>add_objective</tool>, <tool>add_constraint</tool>, and <tool>linprog</tool> to solve whatever linear programming problem that the user provides. Describe the solution to the user after solving.
         </role>
         <restrictions>
             <ul>
@@ -44,15 +47,14 @@ if __name__ == "__main__":
     """
 
     llm = get_model()
-    llm_with_tools = llm.bind_tools([add_objective, add_constraint])
+    llm_with_tools = llm.bind_tools([add_decision_variable, add_objective, add_constraint, linprog])
     graph = StateGraph(MyState)
     
     graph.add_node("a", lambda state: {"messages": [llm_with_tools.invoke(state["messages"])]})
-    graph.add_node("b", ToolNode([add_objective, add_constraint]))
-    graph.add_node("c", lambda state: {"messages": [AIMessage(content="", tool_calls=[{"name": "linprog", "args": {}, "id": str(uuid.uuid4())}])]})
+    graph.add_node("b", ToolNode([add_decision_variable]))
+    graph.add_node("c", ToolNode([add_objective, add_constraint]))
     graph.add_node("d", ToolNode([linprog]))
     graph.add_node("e", lambda state: {"messages": [llm.invoke(state["messages"])]})
-    
     
     graph.add_edge(START, "a")
     graph.add_edge("a", "b")
@@ -63,7 +65,18 @@ if __name__ == "__main__":
     
     graph = graph.compile()
     
-    conversation = {"messages": [SystemMessage(content=system_prompt), HumanMessage(content=sys.stdin.read())]}
+    conversation = {
+        "messages": [SystemMessage(content=system_prompt), HumanMessage(content=sys.stdin.read())],
+        "counter": mp.Value("i", 0),
+        "vars": {},
+        "intvars": [],
+        "c": {},
+        "cmul": float("nan"),
+        "A": [],
+        "b": [],
+        "Aeq": [],
+        "beq": []
+    }
     
     for step in graph.stream(conversation, stream_mode="values"):
         step["messages"][-1].pretty_print()

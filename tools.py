@@ -6,11 +6,11 @@ from scipy.optimize import linprog as splinprog
 from typing_extensions import Literal, Optional, TypedDict
 
 @tool
-def add_decision_variable(name: str, is_integer: bool = False, runtime: ToolRuntime) -> Command:
+def add_decision_variable(name: str, is_integer: bool, runtime: ToolRuntime) -> Command:
     """
     <tool>
         Add a new decision variable to the linear programming problem. Decision variables need to be added before they are referenced by <tool>add_objective</tool> or <tool>add_constraint</tool>.
-        <parameter name="name">A unique identifying name for this decision variable.</parameter>
+        <parameter name="name">A unique identifying name for this decision variable. This can be anything, as long as you remember it when calling <tool>add_objective</tool> and <tool>add_constraint</tool>.</parameter>
         <parameter name="is_integer">Whether or not this decision variable should be restricted to an integer.</parameter>
     </tool>
     """
@@ -53,7 +53,7 @@ def add_objective(coefficients: dict[str, float], kind: Literal["minimize", "max
         update["c"] = coefficients
         update["cmul"] = 1.0
     elif kind == "maximize":
-        update["c"] = {name: -coeff for name, coeff in coefficients}
+        update["c"] = {name: -coeff for name, coeff in coefficients.items()}
         update["cmul"] = -1.0
     else:
         return Command(update={"messages": [ToolMessage(content="Failure: kind is not one of {\"minimize\", \"maximize\"}", tool_call_id=runtime.tool_call_id)]})
@@ -80,14 +80,14 @@ def add_constraint(coefficients: dict[str, float], value: float, kind: Literal["
         if name not in state["vars"]:
             return Command(update={"messages": [ToolMessage(content=f"Failure: decision variable \"{name}\" does not exist", tool_call_id=runtime.tool_call_id)]})
     
-    if kind == "less_than":
+    if kind == "less_than_or_equal":
         update["A"] = [coefficients]
         update["b"] = [value]
     elif kind == "equal":
         update["Aeq"] = [coefficients]
         update["beq"] = [value]
-    elif kind == "greater_than":
-        update["A"] = [{name: -coeff for name, coeff in coefficients}]
+    elif kind == "greater_than_or_equal":
+        update["A"] = [{name: -coeff for name, coeff in coefficients.items()}]
         update["b"] = [-value]
     else:
         return Command(update={"messages": [ToolMessage(content="Failure: kind is not one of {\"less_than_or_equal\", \"equal\", \"greater_than_or_equal\"}", tool_call_id=runtime.tool_call_id)]})
