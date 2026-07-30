@@ -1,0 +1,6 @@
+{
+    "coefficients": [10, 9],
+    "objective": [18, 12],
+    "objective_value": 288
+}
+%%
