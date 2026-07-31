@@ -5,6 +5,7 @@ import numpy as np
 from scipy.optimize import linprog as splinprog
 from typing_extensions import Literal, Optional, TypedDict
 
+'''
 @tool
 def add_decision_variable(name: str, is_integer: bool, runtime: ToolRuntime) -> Command:
     """
@@ -31,13 +32,14 @@ def add_decision_variable(name: str, is_integer: bool, runtime: ToolRuntime) -> 
     update["messages"] = [ToolMessage(content="Success", tool_call_id=runtime.tool_call_id)]
     
     return Command(update=update)
+'''
 
 @tool
 def add_objective(coefficients: dict[str, float], kind: Literal["minimize", "maximize"], runtime: ToolRuntime) -> Command:
     """
     <tool>
         Set the objective function for the current linear programming problem.
-        <parameter name="coefficients">Mapping of variables to their scalar coefficients in the objective function. Variables must be created by <tool>add_decision_variable</tool> before use. Any variables absent from this mapping will automatically be zeroed.</parameter>
+        <parameter name="coefficients">Mapping of variables to their scalar coefficients in the objective function. Variable names can be anything, as long as you remember it when calling <tool>add_constraint</tool>.</parameter>
         <parameter name="kind">Whether or not we seek to minimize or maximize the objective function.</parameter>
     </tool>
     """
@@ -47,7 +49,12 @@ def add_objective(coefficients: dict[str, float], kind: Literal["minimize", "max
     
     for name in coefficients.keys():
         if name not in state["vars"]:
-            return Command(update={"messages": [ToolMessage(content=f"Failure: decision variable \"{name}\" does not exist", tool_call_id=runtime.tool_call_id)]})
+            if "vars" not in update:
+                update["vars"] = {}
+                
+            with state["counter"].get_lock():
+                update["vars"][name] = state["counter"].value
+                state["counter"].value += 1
         
     if kind == "minimize":
         update["c"] = coefficients
@@ -67,7 +74,7 @@ def add_constraint(coefficients: dict[str, float], value: float, kind: Literal["
     """
     <tool>
         Add a new constraint to the current linear programming problem.
-        <parameter name="coefficients">Mapping of variables to their scalar coefficients in this specific constraint. Variables must be created by <tool>add_decision_variable</tool> before use.</parameter>
+        <parameter name="coefficients">Mapping of variables to their scalar coefficients in this specific constraint. Variable names can be anything, as long as you remember it when calling <tool>add_objective</tool>.</parameter>
         <parameter name="value">The numeric limitation placed on the linear combination of the variables for this constraint</parameter>
         <parameter name="kind">If this contraint is to place an upper bound, (a less-than-or-equal-to relation), a lower bound (a greater-than-or-equal-to relation), or an exact value (an equal-to relation) on this constraint, relative to the value.</parameter>
     </tool>
@@ -78,7 +85,12 @@ def add_constraint(coefficients: dict[str, float], value: float, kind: Literal["
     
     for name in coefficients.keys():
         if name not in state["vars"]:
-            return Command(update={"messages": [ToolMessage(content=f"Failure: decision variable \"{name}\" does not exist", tool_call_id=runtime.tool_call_id)]})
+            if "vars" not in update:
+                update["vars"] = {}
+                
+            with state["counter"].get_lock():
+                update["vars"][name] = state["counter"].value
+                state["counter"].value += 1
     
     if kind == "less_than_or_equal":
         update["A"] = [coefficients]

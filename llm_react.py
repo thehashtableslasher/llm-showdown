@@ -1,5 +1,6 @@
 import operator
 import sys
+import multiprocessing as mp
 import uuid
 
 from langchain.agents import create_agent
@@ -16,14 +17,18 @@ from config import get_model
 
 concat = lambda a, b: np.concat((a, b)) if a is not None and b is not None else b
 
+
 class MyState(MessagesState):
     messages: Annotated[list, add_messages]
-    c: np.ndarray
+    counter: mp.Value
+    vars: Annotated[dict[str, int], operator.or_]
+    intvars: Annotated[list[str], operator.add]
+    c: dict[str, float]
     cmul: float
-    A: Annotated[np.ndarray, concat]
-    b: Annotated[np.ndarray, concat]
-    Aeq: Annotated[np.ndarray, concat]
-    beq: Annotated[np.ndarray, concat]
+    A: Annotated[list[dict[str, float]], operator.add]
+    b: Annotated[list[float], operator.add]
+    Aeq: Annotated[list[dict[str, float]], operator.add]
+    beq: Annotated[list[float], operator.add]
     next_step: str
         
 background = """
@@ -203,7 +208,18 @@ if __name__ == "__main__":
     
     graph = graph.compile()
     
-    conversation = {"messages": [HumanMessage(content=sys.stdin.read())]}
+    conversation = {
+        "messages": [HumanMessage(content=sys.stdin.read())],
+        "counter": mp.Value("i", 0),
+        "vars": {},
+        "intvars": [],
+        "c": {},
+        "cmul": float("nan"),
+        "A": [],
+        "b": [],
+        "Aeq": [],
+        "beq": []
+    }
     
     for step in graph.stream(conversation, stream_mode="values"):
         step["messages"][-1].pretty_print()

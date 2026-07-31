@@ -11,7 +11,7 @@ from langgraph.prebuilt import ToolNode
 import numpy as np
 from typing_extensions import Annotated
 
-from tools import add_decision_variable, add_objective, add_constraint, linprog
+from tools import add_objective, add_constraint, linprog
 from config import get_model
 
 class MyState(MessagesState):
@@ -47,12 +47,13 @@ if __name__ == "__main__":
     """
 
     llm = get_model()
-    llm_with_tools = llm.bind_tools([add_decision_variable, add_objective, add_constraint, linprog])
+    llm_with_tools = llm.bind_tools([add_objective, add_constraint, linprog])
     graph = StateGraph(MyState)
     
+    
     graph.add_node("a", lambda state: {"messages": [llm_with_tools.invoke(state["messages"])]})
-    graph.add_node("b", ToolNode([add_decision_variable]))
-    graph.add_node("c", ToolNode([add_objective, add_constraint]))
+    graph.add_node("b", ToolNode([add_objective, add_constraint]))
+    graph.add_node("c", lambda state: {"messages": [AIMessage(content="", tool_calls=[{"name": "linprog", "args": {}, "id": str(uuid.uuid4())}])]})
     graph.add_node("d", ToolNode([linprog]))
     graph.add_node("e", lambda state: {"messages": [llm.invoke(state["messages"])]})
     
