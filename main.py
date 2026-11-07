@@ -1,10 +1,17 @@
+#!/usr/bin/env python3
+
 import configparser
+import os
+import sys
+import readline
+
+from workflows.react import react_graph
 
 from langchain.messages import HumanMessage
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
-def get_model(cfgfile = "config.ini"):
+def get_model(cfgfile):
     cfg = configparser.ConfigParser()
     cfg.read(cfgfile)
     
@@ -35,5 +42,41 @@ def get_model(cfgfile = "config.ini"):
             pass # Intentional fallthrough
         else:
             return model
-            
-    return None
+
+if __name__ == "__main__":
+    histfile = ".llm_history"
+    cfgfile = "config.ini"
+    
+    workflows = {
+        "react": react_graph
+    }
+    
+    if len(sys.argv) < 2:
+        print("Usage: {} <{}>".format(sys.argv[0], "|".join(workflows.keys())))
+        sys.exit(-1)
+    
+    graphfunc = workflows.get(sys.argv[1].lower())
+    
+    if graphfunc is None:
+        print("Usage: {} <{}>".format(sys.argv[0], "|".join(workflows.keys())))
+        sys.exit(-1)
+    
+    graph, conversation = graphfunc(get_model(cfgfile))
+    
+    if os.path.exists(histfile):
+        readline.read_history_file(histfile)
+        
+    try:
+        while True:
+            try:
+                content = input("> ")
+                conversation["messages"].append(HumanMessage(content=content))
+                
+                for step in graph.stream(conversation, stream_mode="values"):
+                    step["messages"][-1].pretty_print()
+                    conversation = step
+            except (EOFError, KeyboardInterrupt):
+                print()
+                break
+    finally:
+        readline.write_history_file(histfile)
