@@ -6,6 +6,7 @@ import sys
 import readline
 
 from workflows.react import react_graph
+from workflows.pax import pax_graph
 
 from langchain.messages import HumanMessage
 from langchain_ollama import ChatOllama
@@ -48,7 +49,8 @@ if __name__ == "__main__":
     cfgfile = "config.ini"
     
     workflows = {
-        "react": react_graph
+        "react": react_graph,
+        "pax": pax_graph
     }
     
     if len(sys.argv) < 2:

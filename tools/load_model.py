@@ -23,9 +23,9 @@ def load_model(filename: str, test_case: bool, runtime: ToolRuntime) -> Command:
     
     try:
         if test_case:
-            ss = andes.load(andes.get_case(filename))
+            ss = andes.load(andes.get_case(filename), setup=False)
         else:
-            ss = andes.load(filename)
+            ss = andes.load(filename, setup=False)
     except Exception as err:
         update["messages"] = [ToolMessage(
             status="error",

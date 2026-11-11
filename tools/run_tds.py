@@ -18,7 +18,7 @@ def run_tds(runtime: ToolRuntime) -> list[float]:
     if ss is None:
         pass # TODO handle error
         
-    ss = copy.deepcopy(ss)
+    #ss = copy.deepcopy(ss)
     ss.setup()
     ss.PFlow.run()
     ss.TDS.run()
