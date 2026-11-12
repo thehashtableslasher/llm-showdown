@@ -7,6 +7,7 @@ import readline
 
 from workflows.react import react_graph
 from workflows.pax import pax_graph
+from workflows.pax_replanner import pax_replanner_graph
 
 from langchain.messages import HumanMessage
 from langchain_ollama import ChatOllama
@@ -50,7 +51,8 @@ if __name__ == "__main__":
     
     workflows = {
         "react": react_graph,
-        "pax": pax_graph
+        "pax": pax_graph,
+        "pax_replanner": pax_replanner_graph
     }
     
     if len(sys.argv) < 2:
@@ -73,9 +75,12 @@ if __name__ == "__main__":
             try:
                 content = input("> ")
                 conversation["messages"].append(HumanMessage(content=content))
+                last_message = None
                 
                 for step in graph.stream(conversation, stream_mode="values"):
-                    step["messages"][-1].pretty_print()
+                    if last_message is not step["messages"][-1]:
+                        last_message = step["messages"][-1]
+                        last_message.pretty_print()
                     conversation = step
             except (EOFError, KeyboardInterrupt):
                 print()
