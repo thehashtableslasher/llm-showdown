@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import json
+import uuid
 
 import andes
 from langchain.tools import tool, ToolRuntime
 from langgraph.types import Command
 from langchain.messages import ToolMessage
 
-from ._common import ReturnStatus, ToolCallerNode
+from ._common import SS_GLOBAL, ReturnStatus, ToolCallerNode
 
 @tool
 def load_model(filename: str, test_case: bool, runtime: ToolRuntime) -> Command:
@@ -32,8 +33,10 @@ def load_model(filename: str, test_case: bool, runtime: ToolRuntime) -> Command:
             content=err,
             tool_call_id=runtime.tool_call_id
         )]
-    else:   
-        update["ss"] = ss
+    else:
+        ss_key = str(uuid.uuid4())
+        SS_GLOBAL[ss_key] = ss
+        update["ss"] = ss_key
         update["messages"] = [ToolMessage(
             status="success",
             content=ss,

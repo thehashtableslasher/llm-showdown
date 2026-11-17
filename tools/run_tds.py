@@ -8,12 +8,14 @@ from langchain_core.runnables import RunnableLambda
 from langchain.messages import AIMessage
 from langchain.tools import tool, ToolRuntime
 
+from ._common import SS_GLOBAL
+
 @tool
 def run_tds(runtime: ToolRuntime) -> list[float]:
     '''
     Run a time-domain simulation on the model. Returns the final values of OMEGA.
     '''
-    ss = runtime.state.get("ss")
+    ss = SS_GLOBAL.get(runtime.state.get("ss"))
     
     if ss is None:
         pass # TODO handle error

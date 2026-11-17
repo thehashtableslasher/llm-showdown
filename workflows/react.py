@@ -19,7 +19,7 @@ from tools import *
 
 class ReActState(MessagesState):
     messages: Annotated[list, add_messages]
-    ss: andes.System
+    ss: str
     next_step: str
 
 class ThinkerResult(BaseModel):

@@ -4,6 +4,8 @@ from langchain_core.runnables import Runnable
 from langchain.messages import HumanMessage, SystemMessage
 from typing_extensions import Literal, Optional, TypedDict
 
+SS_GLOBAL = {}
+
 class ReturnStatus(TypedDict):
     status: Literal["Success", "Failure"]
     extra: Optional[str]
